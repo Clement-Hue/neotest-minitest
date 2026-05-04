@@ -1,14 +1,18 @@
 local function is_treesitter_installed()
-  local ok, _ = pcall(require, "nvim-treesitter.configs")
+  local ok, _ = pcall(require, "nvim-treesitter")
   return ok
 end
 
 local function is_ruby_parser_installed()
-  local ok, parsers = pcall(require, "nvim-treesitter.parsers")
-  if not ok then return false end
+  local function contains(list, value)
+    for _, item in ipairs(list) do
+      if item == value then return true end
+    end
+    return false
+  end
 
-  local has_ruby = parsers.has_parser("ruby")
-  return has_ruby
+  local _, treesitter = pcall(require, "nvim-treesitter")
+  return contains(treesitter.get_installed("parsers"), "ruby")
 end
 
 describe("Treesitter check", function()

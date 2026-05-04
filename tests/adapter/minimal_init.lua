@@ -7,10 +7,12 @@ vim.cmd([[set runtimepath+=./misc/nio]])
 vim.cmd([[set runtimepath+=./misc/plenary]])
 vim.cmd([[set runtimepath+=./misc/treesitter]])
 
-require("nvim-treesitter.configs").setup({
-  ensure_installed = "ruby",
-  sync_install = true,
-})
+local function install_ruby_parser()
+  local treesitter = require("nvim-treesitter")
+  treesitter.install({ "ruby" }):wait(300000)
+end
+
+install_ruby_parser()
 
 require("neotest").setup({
   adapters = {
