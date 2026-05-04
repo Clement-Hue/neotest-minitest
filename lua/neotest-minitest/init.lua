@@ -1,6 +1,5 @@
 local lib = require("neotest.lib")
 local logger = require("neotest.logging")
-local async = require("neotest.async")
 
 local config = require("neotest-minitest.config")
 local utils = require("neotest-minitest.utils")
@@ -48,9 +47,9 @@ function NeotestAdapter.discover_positions(file_path)
 
     ; System tests that inherit from ApplicationSystemTestCase
     ((
-        class 
+        class
         name: [
-          (constant) @namespace.name 
+          (constant) @namespace.name
           (scope_resolution scope: (constant) name: (constant) @namespace.name)
         ]
         (superclass) @superclass (#match? @superclass "(ApplicationSystemTestCase)$" )
@@ -125,12 +124,11 @@ function NeotestAdapter.build_spec(args)
     table.insert(script_args, spec_path)
     table.insert(script_args, "--name")
     -- https://chriskottom.com/articles/command-line-flags-for-minitest-in-the-raw/
-    table.insert(script_args, "/^" .. full_spec_name .. "|" .. full_test_name .. "$/")
+    table.insert(script_args, "/" .. full_spec_name .. "|" .. full_test_name .. "$/")
   end
 
   local function run_dir()
     local tree = args.tree
-    local root = tree:root():data().path
 
     -- This emulates an combination of Rake::TestTask with loader=:direct and
     -- rake_test_loader
@@ -160,8 +158,6 @@ function NeotestAdapter.build_spec(args)
       "--port",
       port,
       "-c",
-      "-e",
-      "cont",
       "--",
     }
 
@@ -179,6 +175,7 @@ function NeotestAdapter.build_spec(args)
       command = "rdbg",
       cwd = "${workspaceFolder}",
       port = port,
+      nonstop = true,
     }
   end
 
@@ -310,9 +307,11 @@ function NeotestAdapter._parse_test_output(output, name_mappings)
       if name_mappings[test_name] then pos_id = name_mappings[test_name] end
     end
 
-    if pos_id then results[pos_id] = {
-      status = status == "." and "passed" or "failed",
-    } end
+    if pos_id then
+      results[pos_id] = {
+        status = status == "." and "passed" or "failed",
+      }
+    end
   end
 
   for test_name, filepath, expected, actual in iter_test_output_error(output) do
