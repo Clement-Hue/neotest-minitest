@@ -295,5 +295,21 @@ SpecTest#test_adds_two_numbers = 0.00 s = .
         }, results)
       end)
     end)
+
+    describe("single passing namespaced spec test", function()
+      local output = [[
+PC::PAO::ConstantsOuigoTest::OUIGO::SSRS#test_0001_keeps_codes_unique = 0.00 s = .
+]]
+
+      it("parses the results correctly", function()
+        local results = plugin._parse_test_output(output, {
+          ["ConstantsOuigoTest::OUIGO::SSRS#test_0001_keeps_codes_unique"] = "testing",
+        })
+
+        assert.are.same({
+          ["testing"] = { status = "passed" },
+        }, results)
+      end)
+    end)
   end)
 end)

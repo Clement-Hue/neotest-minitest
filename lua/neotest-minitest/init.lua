@@ -280,6 +280,34 @@ local iter_test_output_status = function(output)
   end
 end
 
+---@param name_mappings table<string, string>
+---@param test_name string
+---@return string | nil
+local resolve_pos_id = function(name_mappings, test_name)
+  local function find_suffix_match(name)
+    for mapped_name, pos_id in pairs(name_mappings) do
+      if name:sub(- #mapped_name) == mapped_name then
+        return pos_id
+      end
+    end
+    return nil
+  end
+
+  local pos_id = name_mappings[test_name]
+  if pos_id then return pos_id end
+
+  pos_id = find_suffix_match(test_name)
+  if pos_id then return pos_id end
+
+  local stripped_test_name = utils.replace_module_namespace(test_name)
+  if stripped_test_name == test_name then return nil end
+
+  pos_id = name_mappings[stripped_test_name]
+  if pos_id then return pos_id end
+
+  return find_suffix_match(stripped_test_name)
+end
+
 function NeotestAdapter._parse_test_output(output, name_mappings)
   local results = {}
   local error_pattern = "Error:%s*([%w:#_]+):%s*(.-)\n[%w%W]-%.rb:(%d+):"
@@ -301,11 +329,7 @@ function NeotestAdapter._parse_test_output(output, name_mappings)
   end
 
   for test_name, status in iter_test_output_status(output) do
-    local pos_id = name_mappings[test_name]
-    if not pos_id then
-      test_name = utils.replace_module_namespace(test_name)
-      if name_mappings[test_name] then pos_id = name_mappings[test_name] end
-    end
+    local pos_id = resolve_pos_id(name_mappings, test_name)
 
     if pos_id then
       results[pos_id] = {
@@ -317,11 +341,7 @@ function NeotestAdapter._parse_test_output(output, name_mappings)
   for test_name, filepath, expected, actual in iter_test_output_error(output) do
     local message = string.format("Expected: %s\n  Actual: %s", expected, actual)
 
-    local pos_id = name_mappings[test_name]
-    if not pos_id then
-      test_name = utils.replace_module_namespace(test_name)
-      pos_id = name_mappings[test_name]
-    end
+    local pos_id = resolve_pos_id(name_mappings, test_name)
 
     local line = tonumber(string.match(filepath, ":(%d+)$"))
     if results[pos_id] then
@@ -336,9 +356,8 @@ function NeotestAdapter._parse_test_output(output, name_mappings)
   end
 
   for test_name, message, line_str in string.gmatch(output, error_pattern) do
-    test_name = utils.replace_module_namespace(test_name)
     local line = tonumber(line_str)
-    local pos_id = name_mappings[test_name]
+    local pos_id = resolve_pos_id(name_mappings, test_name)
     if results[pos_id] then
       results[pos_id].status = "failed"
       results[pos_id].errors = {
