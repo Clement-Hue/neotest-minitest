@@ -158,6 +158,7 @@ function NeotestAdapter.build_spec(args)
       "--port",
       port,
       "-c",
+      "-n",
       "--",
     }
 
@@ -171,11 +172,10 @@ function NeotestAdapter.build_spec(args)
       bundle = "bundle",
       localfs = true,
       request = "attach",
-      args = rdbg_args,
       command = "rdbg",
+      args = rdbg_args,
       cwd = "${workspaceFolder}",
       port = port,
-      nonstop = true,
     }
   end
 
