@@ -132,6 +132,23 @@ ClassicTest#test_addition = 0.00 s = .
       end)
     end)
 
+    describe("single passing namespaced test with wrapped class line", function()
+      local output = [[
+PC::PAO::SNCF::WarnForLostOptionsTest#test_lost_options = PC::PAO::SNCF::WarnForLostOptionsTest
+0.17 s = .
+]]
+
+      it("parses the results correctly", function()
+        local results = plugin._parse_test_output(output, {
+          ["WarnForLostOptionsTest#test_lost_options"] = "testing",
+        })
+
+        assert.are.same({
+          ["testing"] = { status = "passed" },
+        }, results)
+      end)
+    end)
+
     describe("single error test", function()
       local output = [[
 ClassicTest#test_error = 0.00 s = E

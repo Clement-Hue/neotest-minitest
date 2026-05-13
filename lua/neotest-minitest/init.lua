@@ -248,35 +248,20 @@ local iter_test_output_error = function(output)
 end
 
 local iter_test_output_status = function(output)
-  local pattern = "%s*=%s*[%d.]+%s*s%s*=%s*([FE.])"
+  local pattern = "([^\n]+)%s*=%s*[^\n]-\n?%s*[%d.]+%s*s%s*=%s*([FE.])"
 
   -- keep track of last test result position
   local last_pos = 0
 
   return function()
-    -- find test result
-    local r_start, r_end = string.find(output, pattern, last_pos)
+    -- find test result and associated test name
+    local r_start, r_end, test_name, test_status = string.find(output, pattern, last_pos)
     if r_start == nil or r_end == nil then return nil, nil end
-
-    -- extract status from test results
-    local test_status = string.match(output, pattern, r_start)
-
-    -- find test name
-    --
-    -- iterate backwards through output until we find a newline or start of output.
-    local n_start = 0
-    for i = r_start, 0, -1 do
-      if string.sub(output, i, i) == "\n" then
-        n_start = i + 1
-        break
-      end
-    end
-    local test_name = string.sub(output, n_start, r_start - 1)
 
     -- keep track of last test result position
     last_pos = r_end
 
-    return test_name, test_status
+    return vim.trim(test_name), test_status
   end
 end
 
