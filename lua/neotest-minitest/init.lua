@@ -45,6 +45,19 @@ function NeotestAdapter.discover_positions(file_path)
       (superclass (scope_resolution) @superclass (#match? @superclass "^Minitest::Test"))
     )) @namespace.definition
 
+    ; Acceptance tests that inherit from AcceptanceTest / Trainline::AcceptanceTest
+    ((
+      class
+      name: [
+        (constant) @namespace.name
+        (scope_resolution scope: (constant) name: (constant) @namespace.name)
+      ]
+      superclass: (superclass [
+        (constant) @superclass
+        (scope_resolution) @superclass
+      ] (#match? @superclass "(^|::)AcceptanceTest$"))
+    )) @namespace.definition
+
     ; System tests that inherit from ApplicationSystemTestCase
     ((
         class
