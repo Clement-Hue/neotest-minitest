@@ -125,6 +125,49 @@ describe("Spec Test", function()
 
       assert.are.same(positions, expected_positions)
     end)
+
+    async.it("should discover nested class-based Minitest::Spec tests", function()
+      local test_path = vim.loop.cwd() .. "/tests/minitest_examples/namespaced_class_spec_test.rb"
+      local positions = plugin.discover_positions(test_path):to_list()
+      local expected_positions = {
+        {
+          id = test_path,
+          name = "namespaced_class_spec_test.rb",
+          path = test_path,
+          range = { 0, 0, 18, 0 },
+          type = "file",
+        },
+        {
+          {
+            id = "./tests/minitest_examples/namespaced_class_spec_test.rb::8",
+            name = "SegmentsTest",
+            path = test_path,
+            range = { 7, 4, 15, 7 },
+            type = "namespace",
+          },
+          {
+            {
+              id = "./tests/minitest_examples/namespaced_class_spec_test.rb::9",
+              name = "detects nested class specs",
+              path = test_path,
+              range = { 8, 6, 10, 9 },
+              type = "test",
+            },
+          },
+          {
+            {
+              id = "./tests/minitest_examples/namespaced_class_spec_test.rb::13",
+              name = "detects multiple class specs",
+              path = test_path,
+              range = { 12, 6, 14, 9 },
+              type = "test",
+            },
+          },
+        },
+      }
+
+      assert.are.same(positions, expected_positions)
+    end)
   end)
 
   describe("_parse_test_output", function()

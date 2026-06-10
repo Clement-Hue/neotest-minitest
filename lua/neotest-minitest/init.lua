@@ -38,11 +38,14 @@ end
 ---@return neotest.Tree | nil
 function NeotestAdapter.discover_positions(file_path)
   local query = [[
-    ; Classes that inherit from Minitest::Test
+    ; Classes that inherit from Minitest::Test / Minitest::Spec
     ((
       class
-      name: (constant) @namespace.name
-      (superclass (scope_resolution) @superclass (#match? @superclass "^Minitest::Test"))
+      name: [
+        (constant) @namespace.name
+        (scope_resolution name: (constant) @namespace.name)
+      ]
+      superclass: (superclass (scope_resolution) @superclass (#match? @superclass "^Minitest::(Test|Spec)$"))
     )) @namespace.definition
 
     ; Acceptance tests that inherit from AcceptanceTest / Trainline::AcceptanceTest
@@ -50,7 +53,7 @@ function NeotestAdapter.discover_positions(file_path)
       class
       name: [
         (constant) @namespace.name
-        (scope_resolution scope: (constant) name: (constant) @namespace.name)
+        (scope_resolution name: (constant) @namespace.name)
       ]
       superclass: (superclass [
         (constant) @superclass
@@ -63,7 +66,7 @@ function NeotestAdapter.discover_positions(file_path)
         class
         name: [
           (constant) @namespace.name
-          (scope_resolution scope: (constant) name: (constant) @namespace.name)
+          (scope_resolution name: (constant) @namespace.name)
         ]
         (superclass) @superclass (#match? @superclass "(ApplicationSystemTestCase)$" )
     )) @namespace.definition
@@ -79,7 +82,7 @@ function NeotestAdapter.discover_positions(file_path)
         class
         name: [
           (constant) @namespace.name
-          (scope_resolution scope: (constant) name: (constant) @namespace.name)
+          (scope_resolution name: (constant) @namespace.name)
         ]
         (superclass (scope_resolution) @superclass (#match? @superclass "(::IntegrationTest|::TestCase|::SystemTestCase)$"))
     )) @namespace.definition
