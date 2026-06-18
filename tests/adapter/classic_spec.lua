@@ -76,6 +76,30 @@ describe("Classic Test", function()
 
       assert.are.same(positions, expected_positions)
     end)
+
+    async.it("should discover tests that inherit from a custom base test class", function()
+      local test_path = vim.loop.cwd() .. "/tests/minitest_examples/custom_base_test.rb"
+      local positions = plugin.discover_positions(test_path):to_list()
+      local discovered = {}
+      local function collect(nodes)
+        for _, node in ipairs(nodes) do
+          if type(node) == "table" and node.type ~= nil then
+            table.insert(discovered, { name = node.name, type = node.type })
+          elseif type(node) == "table" then
+            collect(node)
+          end
+        end
+      end
+
+      collect(positions)
+
+      assert.are.same({
+        { name = "custom_base_test.rb", type = "file" },
+        { name = "InvoiceOptionBuilderTest", type = "namespace" },
+        { name = "test_attributes_known_system", type = "test" },
+        { name = "test_attributes_unknown_system", type = "test" },
+      }, discovered)
+    end)
   end)
 
   describe("_parse_test_output", function()

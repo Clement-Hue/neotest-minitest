@@ -48,19 +48,6 @@ function NeotestAdapter.discover_positions(file_path)
       superclass: (superclass (scope_resolution) @superclass (#match? @superclass "^Minitest::(Test|Spec)$"))
     )) @namespace.definition
 
-    ; Acceptance tests that inherit from AcceptanceTest / Trainline::AcceptanceTest
-    ((
-      class
-      name: [
-        (constant) @namespace.name
-        (scope_resolution name: (constant) @namespace.name)
-      ]
-      superclass: (superclass [
-        (constant) @superclass
-        (scope_resolution) @superclass
-      ] (#match? @superclass "(^|::)AcceptanceTest$"))
-    )) @namespace.definition
-
     ; System tests that inherit from ApplicationSystemTestCase
     ((
         class
@@ -113,11 +100,35 @@ function NeotestAdapter.discover_positions(file_path)
     )) @test.definition
   ]]
 
-  return lib.treesitter.parse_positions(file_path, query, {
+  local opts = {
     nested_tests = true,
     require_namespaces = true,
     position_id = "require('neotest-minitest.utils').generate_treesitter_id",
-  })
+  }
+  local tree = lib.treesitter.parse_positions(file_path, query, opts)
+
+  if tree and #tree:children() == 0 then
+    local fallback_query = [[
+      ; Fallback for project-specific custom base test classes
+      ((
+        class
+        name: [
+          (constant) @namespace.name (#match? @namespace.name "(Test|Spec)$")
+          (scope_resolution name: (constant) @namespace.name (#match? @namespace.name "(Test|Spec)$"))
+        ]
+      )) @namespace.definition
+
+      ; Methods that begin with test_
+      ((
+        method
+        name: (identifier) @test.name (#match? @test.name "^test_")
+      )) @test.definition
+    ]]
+
+    tree = lib.treesitter.parse_positions(file_path, fallback_query, opts)
+  end
+
+  return tree
 end
 
 ---@param args neotest.RunArgs
