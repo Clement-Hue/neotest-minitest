@@ -9,6 +9,10 @@ describe("is_test_file", function()
     assert.equals(true, plugin.is_test_file("./test/test_foo.rb"))
   end)
 
+  it("matches directory-style test dot rb files", function()
+    assert.equals(true, plugin.is_test_file("./test/unit_search/ntv/promocode/test.rb"))
+  end)
+
   it("does not match plain ruby files", function()
     assert.equals(false, plugin.is_test_file("./lib/foo.rb"))
   end)

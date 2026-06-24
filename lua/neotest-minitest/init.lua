@@ -19,7 +19,9 @@ NeotestAdapter.root = lib.files.match_root_pattern("Gemfile", ".gitignore")
 ---@param file_path string
 ---@return boolean
 function NeotestAdapter.is_test_file(file_path)
-  return vim.endswith(file_path, "_test.rb") or string.match(file_path, "/test_.+%.rb$") ~= nil
+  return vim.endswith(file_path, "_test.rb")
+    or vim.endswith(file_path, "/test.rb")
+    or string.match(file_path, "/test_.+%.rb$") ~= nil
 end
 
 ---Filter directories when searching for test files
@@ -112,10 +114,31 @@ function NeotestAdapter.discover_positions(file_path)
       ; Fallback for project-specific custom base test classes
       ((
         class
+        !superclass
         name: [
           (constant) @namespace.name (#match? @namespace.name "(Test|Spec)$")
           (scope_resolution name: (constant) @namespace.name (#match? @namespace.name "(Test|Spec)$"))
         ]
+      )) @namespace.definition
+
+      ; Fallback for custom base classes like AcceptanceTest
+      ((
+        class
+        name: [
+          (constant) @namespace.name
+          (scope_resolution name: (constant) @namespace.name)
+        ]
+        (superclass) @superclass (#match? @superclass "(^|::).*(Test|Spec|TestCase)$")
+      )) @namespace.definition
+
+      ; Fallback for custom base classes with explicit namespaces
+      ((
+        class
+        name: [
+          (constant) @namespace.name
+          (scope_resolution name: (constant) @namespace.name)
+        ]
+        superclass: (superclass (scope_resolution) @superclass (#match? @superclass "(^|::).*(Test|Spec|TestCase)$"))
       )) @namespace.definition
 
       ; Methods that begin with test_
